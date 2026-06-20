@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Gaurav — DevOps Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --bg:#070b12; --card:#0d1621; --card2:#111e2e;
+    --border:#1a2e44; --accent:#00ffc8; --accent2:#f59e0b;
+    --danger:#ef4444; --blue:#3b82f6; --purple:#8b5cf6;
+    --green:#22c55e; --text:#c8d8e8; --bright:#eef6ff;
+    --muted:#3d5570; --mono:'JetBrains Mono',monospace;
+    --disp:'Syne',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:var(--disp);min-height:100vh;padding:20px;}
+  ::-webkit-scrollbar{width:5px;height:5px;}
+  ::-webkit-scrollbar-track{background:var(--bg);}
+  ::-webkit-scrollbar-thumb{background:#1e3050;border-radius:3px;}
+
+  /* LAYOUT */
+  .wrap{max-width:1100px;margin:0 auto;}
+
+  /* HEADER */
+  .hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid var(--border);}
+  .hdr-title{font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.3px;}
+  .hdr-sub{font-family:var(--mono);font-size:10px;color:var(--accent);margin-top:4px;letter-spacing:1.5px;}
+  .hdr-right{display:flex;gap:10px;align-items:center;}
+  .day-badge{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;text-align:center;}
+  .day-num{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--accent);}
+  .day-label{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:1px;}
+  .streak-badge{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;text-align:center;}
+  .streak-num{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--accent2);}
+  .streak-label{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:1px;}
+  .reset-btn{background:transparent;border:1px solid var(--muted);color:var(--muted);padding:6px 14px;border-radius:6px;font-family:var(--mono);font-size:10px;cursor:pointer;transition:all 0.2s;}
+  .reset-btn:hover{border-color:var(--danger);color:var(--danger);}
+
+  /* GRID */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px;}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px;}
+
+  /* CARD */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;}
+  .label{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:12px;}
+
+  /* TODAY CHECKLIST */
+  .check-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
+  .check-item:last-child{border-bottom:none;padding-bottom:0;}
+  .check-box{width:22px;height:22px;border-radius:5px;border:2px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;font-size:13px;}
+  .check-box.done{background:var(--accent);border-color:var(--accent);color:var(--bg);}
+  .check-box.done-e{background:var(--accent2);border-color:var(--accent2);color:var(--bg);}
+  .check-box.done-j{background:var(--blue);border-color:var(--blue);color:#fff;}
+  .check-label{font-size:13px;font-weight:600;flex:1;}
+  .check-sub{font-family:var(--mono);font-size:10px;color:var(--muted);}
+  .num-input{background:var(--card2);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:13px;font-weight:700;padding:4px 8px;border-radius:5px;width:52px;text-align:center;outline:none;}
+  .num-input:focus{border-color:var(--accent);}
+
+  /* STATS */
+  .stat-card{text-align:center;}
+  .stat-val{font-size:28px;font-weight:800;margin-bottom:4px;}
+  .stat-label{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;}
+
+  /* PROJECTS */
+  .proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-bottom:14px;}
+  .proj-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all 0.2s;user-select:none;}
+  .proj-card:hover{border-color:#2a4060;transform:translateY(-1px);}
+  .proj-card.complete{border-left:3px solid var(--green);}
+  .proj-card.inprogress{border-left:3px solid var(--accent2);}
+  .proj-card.notstarted{border-left:3px solid var(--border);}
+  .proj-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .proj-id{font-family:var(--mono);font-size:9px;color:var(--muted);}
+  .proj-status-badge{font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:10px;font-weight:700;}
+  .badge-complete{background:rgba(34,197,94,0.15);color:var(--green);}
+  .badge-inprogress{background:rgba(245,158,11,0.15);color:var(--accent2);}
+  .badge-notstarted{background:rgba(61,85,112,0.15);color:var(--muted);}
+  .proj-title{font-size:14px;font-weight:700;color:var(--bright);margin-bottom:4px;}
+  .proj-month{font-family:var(--mono);font-size:10px;color:var(--muted);}
+  .proj-hint{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:8px;font-style:italic;}
+
+  /* SKILLS */
+  .skill-row{margin-bottom:10px;}
+  .skill-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+  .skill-name{font-size:12px;font-weight:600;color:var(--bright);}
+  .skill-pct{font-family:var(--mono);font-size:11px;color:var(--muted);}
+  .skill-track{height:5px;background:#12202e;border-radius:3px;cursor:pointer;position:relative;}
+  .skill-fill{height:100%;border-radius:3px;transition:width 0.3s;}
+
+  /* HABIT HEATMAP */
+  .heatmap{display:flex;flex-wrap:wrap;gap:4px;}
+  .heat-day{width:14px;height:14px;border-radius:3px;background:var(--card2);border:1px solid var(--border);cursor:pointer;transition:all 0.2s;position:relative;}
+  .heat-day:hover::after{content:attr(data-tip);position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:#1a2e44;color:var(--text);font-family:var(--mono);font-size:9px;padding:3px 6px;border-radius:4px;white-space:nowrap;z-index:10;}
+  .heat-0{background:var(--card2);}
+  .heat-1{background:#1a4a30;}
+  .heat-2{background:#00a86b;}
+  .heat-3{background:var(--accent);}
+
+  /* MONTH LABEL */
+  .month-label{font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:4px;letter-spacing:1px;}
+
+  /* PROGRESS BAR */
+  .overall-bar{height:8px;background:#12202e;border-radius:4px;overflow:hidden;margin-top:6px;}
+  .overall-fill{height:100%;background:linear-gradient(90deg,var(--accent),#00c4ff);border-radius:4px;transition:width 0.5s;}
+
+  /* DATE */
+  .date-str{font-family:var(--mono);font-size:11px;color:var(--muted);}
+
+  button{cursor:pointer;}
+
+  @media(max-width:700px){
+    .grid2,.grid3,.grid4{grid-template-columns:1fr;}
+    .hdr{flex-direction:column;gap:12px;}
+    .hdr-right{flex-wrap:wrap;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div>
+      <div class="hdr-title">Gaurav Sardar — DevOps Dashboard</div>
+      <div class="hdr-sub">// CLOUD & DEVOPS TRANSITION · JUNE 21 – AUGUST 31, 2026</div>
+      <div class="date-str" id="dateStr" style="margin-top:6px;"></div>
+    </div>
+    <div class="hdr-right">
+      <div class="day-badge">
+        <div class="day-num" id="dayNum">—</div>
+        <div class="day-label">DAY / 72</div>
+      </div>
+      <div class="streak-badge">
+        <div class="streak-num" id="streakNum">0</div>
+        <div class="streak-label">🔥 STREAK</div>
+      </div>
+      <button class="reset-btn" onclick="resetAll()">Reset Data</button>
+    </div>
+  </div>
+
+  <!-- OVERALL PROGRESS -->
+  <div class="card" style="margin-bottom:14px;">
+    <div class="label">Overall Plan Progress</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <span style="font-size:13px;color:var(--text);">June 21 → September 5, 2026</span>
+      <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);" id="overallPct">0%</span>
+    </div>
+    <div class="overall-bar"><div class="overall-fill" id="overallBar" style="width:0%"></div></div>
+    <div style="display:flex;justify-content:space-between;margin-top:6px;font-family:var(--mono);font-size:10px;color:var(--muted);">
+      <span>Jun 21</span><span id="todayMarker"></span><span>Sep 5</span>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="grid4" style="margin-bottom:14px;">
+    <div class="card stat-card">
+      <div class="stat-val" id="statApplied" style="color:var(--blue);">0</div>
+      <div class="stat-label">TOTAL APPLIED</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-val" id="statConnections" style="color:var(--accent);">0</div>
+      <div class="stat-label">HR CONNECTIONS</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-val" id="statScreens" style="color:var(--accent2);">0</div>
+      <div class="stat-label">SCREENS / INTERVIEWS</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-val" id="statDaysStudied" style="color:var(--green);">0</div>
+      <div class="stat-label">DAYS STUDIED</div>
+    </div>
+  </div>
+
+  <!-- TODAY CHECKLIST -->
+  <div class="grid2" style="margin-bottom:14px;">
+    <div class="card">
+      <div class="label">Today's Checklist</div>
+
+      <div class="check-item" onclick="toggleCheck('morning')">
+        <div class="check-box" id="cb-morning">✓</div>
+        <div style="flex:1;">
+          <div class="check-label">🟢 Morning Study — 6:20–8:20 AM</div>
+          <div class="check-sub">Core block · non-negotiable</div>
+        </div>
+      </div>
+
+      <div class="check-item" onclick="toggleCheck('evening')">
+        <div class="check-box" id="cb-evening">✓</div>
+        <div style="flex:1;">
+          <div class="check-label">🟠 Evening Study — 7:00–9:00 PM</div>
+          <div class="check-sub">Committed block · stay consistent</div>
+        </div>
+      </div>
+
+      <div class="check-item">
+        <div class="check-box done-j" style="cursor:default;font-size:11px;">📋</div>
+        <div style="flex:1;">
+          <div class="check-label">Jobs Applied Today</div>
+          <div class="check-sub">Target: 1–2 in June · 2–3 in July · 3–4 in August</div>
+        </div>
+        <input class="num-input" type="number" id="inp-applied" min="0" max="20" value="0" oninput="updateToday()" onclick="event.stopPropagation()"/>
+      </div>
+
+      <div class="check-item">
+        <div class="check-box done-j" style="cursor:default;font-size:11px;">🔗</div>
+        <div style="flex:1;">
+          <div class="check-label">HR Connections Sent</div>
+          <div class="check-sub">Target: 5/day in June · 7/day in July</div>
+        </div>
+        <input class="num-input" type="number" id="inp-connections" min="0" max="30" value="0" oninput="updateToday()" onclick="event.stopPropagation()"/>
+      </div>
+
+      <div class="check-item">
+        <div class="check-box done-j" style="cursor:default;font-size:11px;">📞</div>
+        <div style="flex:1;">
+          <div class="check-label">Recruiter Screens / Interviews</div>
+          <div class="check-sub">Add when it happens</div>
+        </div>
+        <input class="num-input" type="number" id="inp-screens" min="0" max="10" value="0" oninput="updateToday()" onclick="event.stopPropagation()"/>
+      </div>
+
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:10px;">
+        <button onclick="saveToday()" style="flex:1;background:var(--accent);color:var(--bg);border:none;padding:10px;border-radius:7px;font-family:var(--disp);font-size:13px;font-weight:700;cursor:pointer;">Save Today ✓</button>
+        <button onclick="clearToday()" style="background:var(--card2);color:var(--muted);border:1px solid var(--border);padding:10px 16px;border-radius:7px;font-family:var(--mono);font-size:11px;cursor:pointer;">Clear</button>
+      </div>
+      <div id="save-msg" style="font-family:var(--mono);font-size:10px;color:var(--green);margin-top:8px;text-align:center;display:none;">Saved ✓</div>
+    </div>
+
+    <!-- SKILLS -->
+    <div class="card">
+      <div class="label">Skills Progress <span style="font-size:9px;color:var(--muted);">(click bar to adjust)</span></div>
+      <div id="skills-list"></div>
+    </div>
+  </div>
+
+  <!-- PROJECTS -->
+  <div class="card" style="margin-bottom:14px;">
+    <div class="label">Projects — Click to Update Status</div>
+    <div class="proj-grid" id="proj-grid"></div>
+  </div>
+
+  <!-- HABIT HEATMAP -->
+  <div class="card" style="margin-bottom:14px;">
+    <div class="label">Study Habit Heatmap — June 21 to September 5</div>
+    <div style="display:flex;gap:6px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--muted);">
+        <div style="width:12px;height:12px;border-radius:2px;background:var(--card2);border:1px solid var(--border);"></div>No study
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--muted);">
+        <div style="width:12px;height:12px;border-radius:2px;background:#1a4a30;"></div>Morning only
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--muted);">
+        <div style="width:12px;height:12px;border-radius:2px;background:#00a86b;"></div>Evening only
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--muted);">
+        <div style="width:12px;height:12px;border-radius:2px;background:var(--accent);"></div>Both sessions
+      </div>
+    </div>
+    <div id="heatmap" class="heatmap"></div>
+  </div>
+
+  <!-- FOOTER -->
+  <div style="font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center;padding-top:14px;border-top:1px solid var(--border);">
+    Gaurav Sardar · gauravsardar27@gmail.com · linkedin.com/in/gauravsardar27 · github.com/GauravWeb-Dev
+  </div>
+
+</div>
+
+<script>
+/* ── DATA ── */
+const PLAN_START = new Date('2026-06-21');
+const PLAN_END   = new Date('2026-09-05');
+const TOTAL_DAYS = 72;
+
+const PROJECTS = [
+  { id:1, title:'Terraform AWS Infrastructure', month:'June', status:'complete',
+    tags:['Terraform','VPC','EC2','IAM','S3'] },
+  { id:2, title:'CI/CD Pipeline — GitHub Actions + Docker', month:'June–July', status:'notstarted',
+    tags:['Docker','GitHub Actions','EC2','CI/CD'] },
+  { id:3, title:'Ansible Server Automation', month:'July', status:'notstarted',
+    tags:['Ansible','Linux','Nginx','Bash'] },
+  { id:4, title:'AWS Event-Driven Pipeline — Lambda + SNS + SQS', month:'July', status:'notstarted',
+    tags:['Lambda','SNS','SQS','CloudWatch'] },
+  { id:5, title:'Prometheus + Grafana Monitoring Stack', month:'July', status:'notstarted',
+    tags:['Prometheus','Grafana','Docker Compose'] },
+  { id:6, title:'Capstone — Full DevOps Pipeline', month:'August', status:'notstarted',
+    tags:['Terraform','Docker','CI/CD','Monitoring'] },
+];
+
+const SKILLS = [
+  { key:'aws',     name:'AWS Core Services',      color:'#00ffc8', def:78 },
+  { key:'linux',   name:'Linux & Bash',            color:'#00ffc8', def:85 },
+  { key:'docker',  name:'Docker',                  color:'#3b82f6', def:55 },
+  { key:'ansible', name:'Ansible',                 color:'#f59e0b', def:30 },
+  { key:'tf',      name:'Terraform',               color:'#f97316', def:25 },
+  { key:'cicd',    name:'GitHub Actions / CI-CD',  color:'#f97316', def:18 },
+  { key:'k8s',     name:'Kubernetes',              color:'#ef4444', def:0  },
+  { key:'mon',     name:'Prometheus & Grafana',    color:'#ef4444', def:0  },
+];
+
+/* ── STORAGE ── */
+function load(key, def) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; }
+  catch { return def; }
+}
+function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
+
+function getState() {
+  return {
+    projects: load('gd_projects', PROJECTS.map(p => ({ id:p.id, status:p.status }))),
+    skills:   load('gd_skills',   Object.fromEntries(SKILLS.map(s => [s.key, s.def]))),
+    habits:   load('gd_habits',   {}),
+    today:    load('gd_today',    { morning:false, evening:false, applied:0, connections:0, screens:0 }),
+  };
+}
+function setState(st) {
+  save('gd_projects', st.projects);
+  save('gd_skills',   st.skills);
+  save('gd_habits',   st.habits);
+  save('gd_today',    st.today);
+}
+
+let STATE = getState();
+
+/* ── HELPERS ── */
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function dayOfPlan() {
+  const now = new Date();
+  const diff = Math.floor((now - PLAN_START) / 86400000) + 1;
+  return Math.max(1, Math.min(diff, TOTAL_DAYS));
+}
+
+function calcStreak() {
+  let streak = 0;
+  const h = STATE.habits;
+  const d = new Date();
+  for (let i = 0; i < 60; i++) {
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const day = h[key];
+    if (day && (day.morning || day.evening)) { streak++; }
+    else if (i > 0) break;
+    d.setDate(d.getDate() - 1);
+  }
+  return streak;
+}
+
+function calcTotals() {
+  let applied = 0, connections = 0, screens = 0, daysStudied = 0;
+  Object.values(STATE.habits).forEach(d => {
+    applied      += d.applied      || 0;
+    connections  += d.connections  || 0;
+    screens      += d.screens      || 0;
+    if (d.morning || d.evening) daysStudied++;
+  });
+  return { applied, connections, screens, daysStudied };
+}
+
+/* ── RENDER ── */
+function renderHeader() {
+  const now = new Date();
+  document.getElementById('dateStr').textContent =
+    now.toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('dayNum').textContent = `${dayOfPlan()}`;
+  document.getElementById('streakNum').textContent = calcStreak();
+
+  const pct = Math.round((dayOfPlan() / TOTAL_DAYS) * 100);
+  document.getElementById('overallPct').textContent = pct + '%';
+  document.getElementById('overallBar').style.width = pct + '%';
+  document.getElementById('todayMarker').textContent = 'Today: Day ' + dayOfPlan();
+}
+
+function renderStats() {
+  const t = calcTotals();
+  document.getElementById('statApplied').textContent    = t.applied;
+  document.getElementById('statConnections').textContent = t.connections;
+  document.getElementById('statScreens').textContent    = t.screens;
+  document.getElementById('statDaysStudied').textContent = t.daysStudied;
+}
+
+function renderChecklist() {
+  const td = STATE.today;
+  const cbm = document.getElementById('cb-morning');
+  const cbe = document.getElementById('cb-evening');
+  cbm.className = 'check-box' + (td.morning ? ' done' : '');
+  cbm.textContent = td.morning ? '✓' : '';
+  cbe.className = 'check-box' + (td.evening ? ' done-e' : '');
+  cbe.textContent = td.evening ? '✓' : '';
+  document.getElementById('inp-applied').value     = td.applied     || 0;
+  document.getElementById('inp-connections').value = td.connections || 0;
+  document.getElementById('inp-screens').value     = td.screens     || 0;
+}
+
+function renderSkills() {
+  const list = document.getElementById('skills-list');
+  list.innerHTML = SKILLS.map(sk => {
+    const pct = STATE.skills[sk.key] || 0;
+    return `
+      <div class="skill-row">
+        <div class="skill-top">
+          <span class="skill-name">${sk.name}</span>
+          <span class="skill-pct" id="spct-${sk.key}">${pct}%</span>
+        </div>
+        <div class="skill-track" onclick="adjustSkill('${sk.key}', event)" title="Click to set level">
+          <div class="skill-fill" id="sbar-${sk.key}" style="width:${pct}%;background:linear-gradient(90deg,${sk.color}66,${sk.color})"></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderProjects() {
+  const grid = document.getElementById('proj-grid');
+  const statusMap = Object.fromEntries(STATE.projects.map(p => [p.id, p.status]));
+  grid.innerHTML = PROJECTS.map(p => {
+    const st = statusMap[p.id] || p.status;
+    const cfg = {
+      complete:   { label:'✅ Complete',    cls:'badge-complete',   card:'complete'   },
+      inprogress: { label:'🔄 In Progress', cls:'badge-inprogress', card:'inprogress' },
+      notstarted: { label:'⏳ Not Started', cls:'badge-notstarted', card:'notstarted' },
+    }[st];
+    return `
+      <div class="proj-card ${cfg.card}" onclick="cycleProject(${p.id})">
+        <div class="proj-header">
+          <span class="proj-id">Project ${p.id} · ${p.month}</span>
+          <span class="proj-status-badge ${cfg.cls}">${cfg.label}</span>
+        </div>
+        <div class="proj-title">${p.title}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;">
+          ${p.tags.map(t=>`<span style="background:#0f1e30;color:var(--accent);padding:2px 7px;border-radius:4px;font-size:10px;font-family:var(--mono);">${t}</span>`).join('')}
+        </div>
+        <div class="proj-hint">Click to cycle: Not Started → In Progress → Complete</div>
+      </div>`;
+  }).join('');
+}
+
+function renderHeatmap() {
+  const map = document.getElementById('heatmap');
+  map.innerHTML = '';
+  const d = new Date(PLAN_START);
+  const end = new Date(PLAN_END);
+  const today = todayKey();
+
+  while (d <= end) {
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const day = STATE.habits[key];
+    let cls = 'heat-0', tip = key;
+    if (day) {
+      if (day.morning && day.evening) { cls='heat-3'; tip=`${key}: Both sessions ✓`; }
+      else if (day.morning)           { cls='heat-1'; tip=`${key}: Morning only`; }
+      else if (day.evening)           { cls='heat-2'; tip=`${key}: Evening only`; }
+    }
+    const el = document.createElement('div');
+    el.className = `heat-day ${cls}`;
+    el.setAttribute('data-tip', tip);
+    if (key === today) el.style.outline = '2px solid var(--accent)';
+    if (d > new Date()) el.style.opacity = '0.3';
+    map.appendChild(el);
+    d.setDate(d.getDate() + 1);
+  }
+}
+
+function renderAll() {
+  renderHeader();
+  renderStats();
+  renderChecklist();
+  renderSkills();
+  renderProjects();
+  renderHeatmap();
+}
+
+/* ── INTERACTIONS ── */
+function toggleCheck(field) {
+  STATE.today[field] = !STATE.today[field];
+  renderChecklist();
+}
+
+function updateToday() {
+  STATE.today.applied      = parseInt(document.getElementById('inp-applied').value)     || 0;
+  STATE.today.connections  = parseInt(document.getElementById('inp-connections').value) || 0;
+  STATE.today.screens      = parseInt(document.getElementById('inp-screens').value)     || 0;
+}
+
+function saveToday() {
+  updateToday();
+  STATE.habits[todayKey()] = { ...STATE.today };
+  setState(STATE);
+  renderStats();
+  renderHeatmap();
+  renderHeader();
+  const msg = document.getElementById('save-msg');
+  msg.style.display = 'block';
+  setTimeout(() => msg.style.display = 'none', 2000);
+}
+
+function clearToday() {
+  STATE.today = { morning:false, evening:false, applied:0, connections:0, screens:0 };
+  renderChecklist();
+}
+
+function cycleProject(id) {
+  const cycle = { notstarted:'inprogress', inprogress:'complete', complete:'notstarted' };
+  const proj = STATE.projects.find(p => p.id === id);
+  if (proj) { proj.status = cycle[proj.status] || 'notstarted'; }
+  save('gd_projects', STATE.projects);
+  renderProjects();
+}
+
+function adjustSkill(key, e) {
+  const track = e.currentTarget;
+  const rect = track.getBoundingClientRect();
+  const pct = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+  STATE.skills[key] = Math.max(0, Math.min(100, pct));
+  save('gd_skills', STATE.skills);
+  document.getElementById(`sbar-${key}`).style.width = STATE.skills[key] + '%';
+  document.getElementById(`spct-${key}`).textContent = STATE.skills[key] + '%';
+}
+
+function resetAll() {
+  if (!confirm('Sab data delete ho jayega. Are you sure?')) return;
+  localStorage.clear();
+  STATE = getState();
+  // restore project 1 as complete
+  STATE.projects[0].status = 'complete';
+  setState(STATE);
+  renderAll();
+}
+
+/* ── INIT ── */
+// Load today's saved data if it exists
+const savedToday = STATE.habits[todayKey()];
+if (savedToday) STATE.today = { ...savedToday };
+
+// Project 1 is always complete
+if (STATE.projects[0]) STATE.projects[0].status = 'complete';
+
+renderAll();
+
+// Refresh header every minute
+setInterval(() => { renderHeader(); }, 60000);
+</script>
+</body>
+</html>
